@@ -16,16 +16,12 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
  
 
  ## PDF loader 
-from langchain_community.document_loaderers import PyPDFLoader
-
 
 
 def main():
     st.write("This is the Admin page for pdf demo")
     uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
     if uploaded_file is not None:
-        request_id = uuid()
-        st.write("File uploaded, Name:", uploaded_file.name, "Size:", uploaded_file.size, "Request ID:", request_id) 
         saved_file_name = f"{request_id}.pdf" 
         with open(saved_file_name, "wb") as w:
             w.write(uploaded_file.getvalue())
@@ -34,7 +30,6 @@ def main():
         pdf_loader = PyPDFLoader(saved_file_name)
         pages = pdf_loader.load_and_split()
 
-        st.write("Number of pages in the PDF:", len(pages))
 
 
 
