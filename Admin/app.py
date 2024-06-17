@@ -28,6 +28,26 @@ def split_text(pages, chunk_size, chunk_overlap):
     docs = splitter.split_documents(pages)
     return docs
 
+##import FAISS
+from langchain_community.vectorstores import FAISS # type: ignore
+bedrock_client = boto3.client("service_name=bedrock-runtime")
+bedrock_embedding  = BedrockEmbeddings(model_id = "amazon.titan-embed-text-v1", client = bedrock_client)
+
+
+
+## Creating the vector store
+def create_vector_store(request_id, documents):
+    vector_store_faiss = FAISS.from_documents(request_id, documents, bedrock_embedding)
+    FileName= f"{request_id}.bin"
+    FolderPath = "/tmp/"
+    vector_store_faiss.save_local(index_name= FileName,folder_path= FolderPath, )
+
+    ## Upload the file to S3
+    S3_client.upload_file(FolderPath +'/' + FileName + '.faiss', Bucket=  BUCKET_NAME, Key = 'my_faiss.faiss')
+    S3_client.upload_file(FolderPath +'/' + FileName + '.pkl', Bucket=  BUCKET_NAME, Key = 'my_faiss.pkl')
+
+    return True
+
 
 def main():
     st.write("This is the Admin page for pdf demo")
@@ -46,14 +66,21 @@ def main():
 
         st.write("Number of pages in the PDF:", len(pages)) 
 
-        ## Split the text
-
-        
-        splitted_text = split_text(pages, 1000, 200)
+        ## Split the text     
+        splitted_doc = split_text(pages, 1000, 200)
         st.write(f"Splitted doc length: {len(splitted_text)} ")
         st.write("===========================================")
-        st.write(splitted_text[0])
+        st.write(splitted_doc[0])
         st.write("===========================================")
+        st.write(splitted_doc[1])
+
+        st.write("Creating the vector store")
+        result = create_vector_store(request_id, splitted_doc)
+        if result:
+            st.write("Vector store created successfully")
+        else:
+            st.write("Error in creating the vector store")
+        
 
 
 
