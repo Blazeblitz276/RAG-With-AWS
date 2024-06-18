@@ -4,9 +4,10 @@ import os
 import uuid
 
 ## S3_client
-
-S3_client = boto3.client("s3")
 BUCKET_NAME = os.getenv("BUCKET_NAME")
+AWS_REGION = os.getenv("AWS_REGION")
+
+S3_client = boto3.client("s3",region_name= AWS_REGION)
 
 ## Bedrock
 from langchain_community.embeddings import BedrockEmbeddings # type: ignore
@@ -30,14 +31,14 @@ def split_text(pages, chunk_size, chunk_overlap):
 
 ##import FAISS
 from langchain_community.vectorstores import FAISS # type: ignore
-bedrock_client = boto3.client("service_name=bedrock-runtime")
+bedrock_client = boto3.client(service_name="bedrock-runtime",region_name= AWS_REGION )
 bedrock_embedding  = BedrockEmbeddings(model_id = "amazon.titan-embed-text-v1", client = bedrock_client)
 
 
 
 ## Creating the vector store
 def create_vector_store(request_id, documents):
-    vector_store_faiss = FAISS.from_documents(request_id, documents, bedrock_embedding)
+    vector_store_faiss = FAISS.from_documents( documents, bedrock_embedding)
     FileName= f"{request_id}.bin"
     FolderPath = "/tmp/"
     vector_store_faiss.save_local(index_name= FileName,folder_path= FolderPath, )
@@ -68,7 +69,7 @@ def main():
 
         ## Split the text     
         splitted_doc = split_text(pages, 1000, 200)
-        st.write(f"Splitted doc length: {len(splitted_text)} ")
+        st.write(f"Splitted doc length: {len(splitted_doc)} ")
         st.write("===========================================")
         st.write(splitted_doc[0])
         st.write("===========================================")
